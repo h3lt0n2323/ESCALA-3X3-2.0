@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Supervisor de Plantão - Escala 3x3</title>
+    <title>Supervisor de Plantão Agora</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,50 +14,19 @@
             font-size: 2.5em;
             color: #333;
         }
-        input[type="date"], select {
-            padding: 10px;
-            font-size: 1em;
-            margin-top: 20px;
-            margin-right: 10px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 1em;
-            cursor: pointer;
-        }
         #resultado {
-            margin-top: 30px;
-            font-size: 1.5em;
+            margin-top: 40px;
+            font-size: 1.8em;
             color: #222;
         }
     </style>
 </head>
 <body>
-    <h1>Descubra quem está de plantão 3x3</h1>
-    <input type="date" id="data" />
-    <select id="turno">
-        <option value="dia">Dia (06:00 - 18:00)</option>
-        <option value="noite">Noite (18:00 - 06:00)</option>
-    </select>
-    <button onclick="verificarSupervisor()">Verificar</button>
-    <div id="resultado"></div>
+    <h1>Quem está de plantão agora?</h1>
+    <div id="resultado">Verificando...</div>
 
     <script>
-        const schedule = {};
-        const turmas = ["Turma B", "Turma A"]; // começa com B no dia 1 de janeiro
-        let dataAtual = new Date("2025-01-01");
-        const fimAno = new Date("2025-12-31");
-        let indexTurma = 0;
-
-        while (dataAtual <= fimAno) {
-            for (let i = 0; i < 3 && dataAtual <= fimAno; i++) {
-                const dataStr = dataAtual.toISOString().split("T")[0];
-                schedule[dataStr] = turmas[indexTurma];
-                dataAtual.setDate(dataAtual.getDate() + 1);
-            }
-            indexTurma = 1 - indexTurma; // alterna entre 0 e 1
-        }
-
+        const turmas = ["Turma B", "Turma A"];
         const supervisores = {
             "Turma A": {
                 dia: "Paulo Candido",
@@ -69,18 +38,35 @@
             }
         };
 
-        function verificarSupervisor() {
-            const data = document.getElementById("data").value;
-            const turno = document.getElementById("turno").value;
-            const resultado = document.getElementById("resultado");
+        function obterTurma(dataStr) {
+            const inicio = new Date("2025-01-01");
+            const atual = new Date(dataStr);
+            const diffDias = Math.floor((atual - inicio) / (1000 * 60 * 60 * 24));
+            const bloco = Math.floor(diffDias / 3);
+            return turmas[bloco % 2];
+        }
 
-            if (schedule[data]) {
-                const turma = schedule[data];
-                const supervisor = supervisores[turma][turno];
-                resultado.innerHTML = ✅ <strong>${supervisor}</strong> está de plantão em <strong>${data}</strong> (${turma}, turno ${turno.toUpperCase()});
-            } else {
-                resultado.innerHTML = "❌ Data inválida ou fora do calendário de 2025.";
-            }
+        function verificarAgora() {
+            const agora = new Date();
+            const hora = agora.getHours();
+            const turno = (hora >= 6 && hora < 18) ? "dia" : "noite";
+
+            const dataStr = agora.toISOString().split("T")[0];
+            const turma = obterTurma(dataStr);
+            const supervisor = supervisores[turma][turno];
+
+            document.getElementById("resultado").innerHTML = `
+                ✅ Agora são ${hora.toString().padStart(2, '0')}:00<br>
+                Supervisor de plantão: <strong>${supervisor}</strong><br>
+                (${turma}, turno ${turno.toUpperCase()})
+            `;
+        }
+
+        verificarAgora();
+        setInterval(verificarAgora, 60000); // Atualiza a cada minuto
+    </script>
+</body>
+</html>
         }
     </script>
 </body>
